@@ -1,21 +1,20 @@
-# Snowflake Social Media Analytics Project
+# Social Media Analytics using Snowflake
 
 ## Overview
 
-This project demonstrates a data pipeline built using Snowflake. It processes JSON tweet data, extracts hashtags, and enables data interaction using a Streamlit app.
+This project demonstrates a data pipeline built using Snowflake to process and analyze social media data. It focuses on extracting insights such as trending hashtags from semi-structured JSON data.
 
 ## Features
 
-* Data ingestion using COPY INTO
-* JSON processing using VARIANT and FLATTEN
-* Hashtag analytics
-* Streamlit app integration
+* Data ingestion using Snowflake stages and COPY INTO
+* Processing nested JSON using VARIANT and FLATTEN
+* Hashtag extraction and aggregation
+* Basic analytics on tweet data
 
 ## Tech Stack
 
-* Snowflake
-* SQL
-* Python (Streamlit)
+* Snowflake (SQL)
+* JSON data processing
 
 ## Author
 
