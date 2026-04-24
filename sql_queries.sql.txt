@@ -1,0 +1,13 @@
+-- Create table
+CREATE OR REPLACE TABLE tweet_ingest (
+  raw_status VARIANT
+);
+
+-- Extract hashtags
+SELECT 
+  value:text::varchar AS hashtag,
+  COUNT(*) AS total_count
+FROM tweet_ingest,
+LATERAL FLATTEN(input => raw_status:entities:hashtags)
+GROUP BY hashtag
+ORDER BY total_count DESC;
