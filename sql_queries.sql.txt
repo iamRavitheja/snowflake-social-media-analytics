@@ -1,13 +1,67 @@
--- Create table
-CREATE OR REPLACE TABLE tweet_ingest (
-  raw_status VARIANT
+-- ================================
+-- 1. DATABASE & SCHEMA SETUP
+-- ================================
+CREATE OR REPLACE DATABASE social_media_db;
+USE DATABASE social_media_db;
+
+CREATE OR REPLACE SCHEMA raw_layer;
+CREATE OR REPLACE SCHEMA analytics_layer;
+
+-- ================================
+-- 2. FILE FORMAT (JSON)
+-- ================================
+CREATE OR REPLACE FILE FORMAT json_format
+TYPE = 'JSON';
+
+-- ================================
+-- 3. STAGE CREATION
+-- ================================
+CREATE OR REPLACE STAGE social_media_stage
+FILE_FORMAT = json_format;
+
+-- ================================
+-- 4. RAW TABLE (VARIANT)
+-- ================================
+CREATE OR REPLACE TABLE raw_layer.tweet_raw (
+    raw_data VARIANT
 );
 
--- Extract hashtags
+-- ================================
+-- 5. LOAD DATA USING COPY INTO
+-- (Make sure file is uploaded to stage)
+-- ================================
+COPY INTO raw_layer.tweet_raw
+FROM @social_media_stage
+FILE_FORMAT = (FORMAT_NAME = json_format);
+
+-- ================================
+-- 6. EXPLORE RAW DATA
+-- ================================
+SELECT raw_data FROM raw_layer.tweet_raw;
+
+SELECT raw_data:entities FROM raw_layer.tweet_raw;
+
+-- ================================
+-- 7. FLATTEN NESTED JSON (HASHTAGS)
+-- ================================
 SELECT 
-  value:text::varchar AS hashtag,
-  COUNT(*) AS total_count
-FROM tweet_ingest,
-LATERAL FLATTEN(input => raw_status:entities:hashtags)
+    value:text::varchar AS hashtag
+FROM raw_layer.tweet_raw,
+LATERAL FLATTEN(input => raw_data:entities:hashtags);
+
+-- ================================
+-- 8. FINAL ANALYTICS TABLE
+-- ================================
+CREATE OR REPLACE TABLE analytics_layer.hashtag_analysis AS
+SELECT 
+    value:text::varchar AS hashtag,
+    COUNT(*) AS total_count
+FROM raw_layer.tweet_raw,
+LATERAL FLATTEN(input => raw_data:entities:hashtags)
 GROUP BY hashtag
 ORDER BY total_count DESC;
+
+-- ================================
+-- 9. FINAL OUTPUT
+-- ================================
+SELECT * FROM analytics_layer.hashtag_analysis;
